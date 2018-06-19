@@ -1,9 +1,8 @@
 # MVPlugLib
-如何用最低的改动成本，在老代码中使用MVP模式开发，本项目给出一种不对老代码有任何侵入性的插件式解决方案。by Databinding+MVP+Retrofit+Rxjava
+代码示例以及使用方法，详见App主工程。
 
 ## 实现功能
-* 统一配置和管理异常视图，并根据网络请求结果自动切换展示对应的视图类型，主要有：载入中，网络异常，服务器异常，空视图，加载更多异常，没有更多了等,
-并支持异常视图的多样化配置，可实现每个页面有独立的风格。
+* 统一配置和管理异常视图，并根据网络请求结果自动切换展示对应的视图类型，主要有：载入中，网络异常，服务器异常，空视图，加载更多异常，没有更多了等。
 ``` java
 MVPlugConfig.Builder builder = new MVPlugConfig.Builder(this);
         builder.loadingLayoutRes(R.layout.app_res_loading_view)
@@ -14,6 +13,20 @@ MVPlugConfig.Builder builder = new MVPlugConfig.Builder(this);
                 .footerLoadMoreLayout(R.layout.view_more)
                 .footerNoMoreLayout(R.layout.view_nomore);
         MVPlug.getInstance().init(builder.build());
+```
+* 支持异常视图的多样化配置，可实现每个页面有独立的风格
+``` java
+    public void showSpecialViewByTag(String tag) {
+        indicatedView.showViewByTag(tag);
+    }
+
+    public void setSpecialView(int layout, String tag) {
+        indicatedView.initViews(layout,tag);
+    }
+
+    public View getSpecialViewByTag(String tag) {
+        return indicatedView.getViewByTag(tag);
+    }
 ```
 
 * 视图层基于Fragment，不强制要求继承任何BaseActivity.
