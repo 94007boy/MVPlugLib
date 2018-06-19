@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.djjie.mvpluglib.adapter.MVPlugRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/mvplug_refresh_layout">
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/mvplug_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+</com.djjie.mvpluglib.adapter.MVPlugRefreshLayout>
