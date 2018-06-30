@@ -2,7 +2,7 @@
 代码示例以及使用方法，详见App主工程，框架源码详见lib_mvplug库工程。
 
 ## 实现功能
-* 统一配置和管理异常视图，并根据网络请求结果自动切换展示对应的视图类型，主要有：载入中，网络异常，服务器异常，空视图，加载更多异常，没有更多了等。
+* 各种网络状态视图统一配置，主要有：载入中，网络异常，服务器异常，空视图，加载更多异常，没有更多了等。
 ``` java
 MVPlugConfig.Builder builder = new MVPlugConfig.Builder(this);
         builder.loadingLayoutRes(R.layout.app_res_loading_view)
@@ -14,6 +14,7 @@ MVPlugConfig.Builder builder = new MVPlugConfig.Builder(this);
                 .footerNoMoreLayout(R.layout.view_nomore);
         MVPlug.getInstance().init(builder.build());
 ```
+* 各种网络状态视图自动切换，根据网络或者本地数据的请求结果，自动切换显示对应的视图，切换视图同上。
 * 支持异常视图的多样化配置，可实现每个页面有独立的风格
 ``` java
     public void showSpecialViewByTag(String tag) {
