@@ -14,7 +14,37 @@ MVPlugConfig.Builder builder = new MVPlugConfig.Builder(this);
                 .footerNoMoreLayout(R.layout.view_nomore);
         MVPlug.getInstance().init(builder.build());
 ```
-* 框架实现了数据加载状态视图自动切换，根据网络或者本地数据的请求结果，自动切换到对应的视图，切换视图同上。
+* 框架实现了数据加载状态视图自动切换，根据网络或者本地数据的请求结果，自动切换到对应的视图。
+``` java
+        @Override
+        public void onError(Throwable e) {
+            if (view == null || view.get() == null)return;
+            view.get().getAdapterPresenter().setLoadMoreLocked(false);//放开加载更多锁
+            if (state != MVPlugConfig.STATE_LOADMORE){//载入刷新，或者下拉刷新请求异常处理
+                view.get().dismissLoadingView();
+                view.get().getAdapterPresenter().stopRefreshing();
+                if (MVPlug.isNetConnected(view.get().getContext())){
+                    view.get().showServerErrorView();//服务器异常
+                }else {
+                    view.get().showBadInternetView();//网络异常
+                }
+            }else {//列表视图加载更多请求异常处理
+                view.get().getAdapterPresenter().onLoadMoreError();
+            }
+            dealWithException(e);//展示异常文字提示
+        }
+
+        @Override
+        public void onNext(M m) {
+            if (view == null || view.get() == null)return;
+            view.get().getAdapterPresenter().setLoadMoreLocked(false);
+            onResult(m,state);
+            if (state != MVPlugConfig.STATE_LOADMORE){//数据加载成功，隐藏载入视图或者下拉刷新头部
+                view.get().getAdapterPresenter().stopRefreshing();
+                view.get().dismissLoadingView();
+            }
+        }
+```
 * 框架支持数据加载状态视图的多样化配置，可实现每个页面有独立的样式
 ``` java
     public void showSpecialViewByTag(String tag) {
