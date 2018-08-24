@@ -19,19 +19,25 @@ MVPlugConfig.Builder builder = new MVPlugConfig.Builder(this);
         @Override
         public void onError(Throwable e) {
             if (view == null || view.get() == null)return;
-            view.get().getAdapterPresenter().setLoadMoreLocked(false);//放开加载更多锁
-            if (state != MVPlugConfig.STATE_LOADMORE){//载入刷新，或者下拉刷新请求异常处理
-                view.get().dismissLoadingView();
-                view.get().getAdapterPresenter().stopRefreshing();
-                if (MVPlug.isNetConnected(view.get().getContext())){
-                    view.get().showServerErrorView();//服务器异常
-                }else {
-                    view.get().showBadInternetView();//网络异常
+            view.get().getAdapterPresenter().setLoadMoreLocked(false);
+            if (state != MVPlugConfig.STATE_LOADMORE){
+                view.get().dismissLoadingView(tag);
+                if (adapterPresenter != null){
+                    adapterPresenter.stopRefreshing();
+                }else{
+                    view.get().getAdapterPresenter().stopRefreshing();
                 }
-            }else {//列表视图加载更多请求异常处理
+                if (state == MVPlugConfig.STATE_LOADING){
+                    if (MVPlug.isNetConnected(view.get().getContext())){
+                        view.get().showServerErrorView(tag);
+                    }else {
+                        view.get().showBadInternetView(tag);
+                    }
+                }
+            }else {
                 view.get().getAdapterPresenter().onLoadMoreError();
             }
-            dealWithException(e);//展示异常文字提示
+            dealWithException(e);
         }
 
         @Override
@@ -39,9 +45,9 @@ MVPlugConfig.Builder builder = new MVPlugConfig.Builder(this);
             if (view == null || view.get() == null)return;
             view.get().getAdapterPresenter().setLoadMoreLocked(false);
             onResult(m,state);
-            if (state != MVPlugConfig.STATE_LOADMORE){//数据加载成功，隐藏载入视图或者下拉刷新头部
+            if (!view.get().isCloseAutoDismiss() && state != MVPlugConfig.STATE_LOADMORE){
                 view.get().getAdapterPresenter().stopRefreshing();
-                view.get().dismissLoadingView();
+                view.get().dismissLoadingView(tag);
             }
         }
 ```
