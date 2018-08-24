@@ -8,7 +8,7 @@ package com.djjie.mvpluglib.model;
  */
 public class MVPlugBaseResp<T> {
 
-	private int code;
+	private int code = -1;
 	private String msg;
 	private T data;
 

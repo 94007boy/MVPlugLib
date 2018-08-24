@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.TextUtils;
 
 import com.djjie.mvpluglib.model.ResConverterFactory;
+import com.djjie.mvpluglib.view.MVPlugView;
 
 import retrofit2.Converter;
 
@@ -18,6 +19,7 @@ public class MVPlugConfig {
     public static final int STATE_LOADING = 0;
     public static final int STATE_REFRESH = 1;
     public static final int STATE_LOADMORE = 2;
+    public static final int STATE_NONE = 3;
 
     private MVPlugConfig(Builder builder) {
         if (builder == null) {
@@ -61,9 +63,9 @@ public class MVPlugConfig {
         return mBuilder.badInternetLayoutRes;
     }
 
-    public int getLoadingLayoutRes() {
-        return mBuilder.loadingLayoutRes;
-    }
+//    public int getLoadingLayoutRes() {
+//        return mBuilder.loadingLayoutRes;
+//    }
 
     public int getResFailureLayoutRes() {
         return mBuilder.resFailureLayoutRes;
@@ -76,9 +78,9 @@ public class MVPlugConfig {
         return mBuilder.emptyDataViewBtnResId;
     }
 
-    public int loadingAnimaIvResId() {
-        return mBuilder.loadingAnimaIvResId;
-    }
+//    public int loadingAnimaIvResId() {
+//        return mBuilder.loadingAnimaIvResId;
+//    }
 
     public int getEmptyDataViewRes() {
         return mBuilder.emptyDataViewRes;
@@ -104,6 +106,14 @@ public class MVPlugConfig {
         return mBuilder.mContext;
     }
 
+    public MVPlugView.RefreshHeaderView getPullHeaderView() {
+        return mBuilder.pullHeaderViewObj;
+    }
+
+    public MVPlugView.LoadingView getLoadingViewObj() {
+        return mBuilder.loadingViewObj;
+    }
+
     public interface OnResponseSuccess {
         abstract String decodeResBody(String encodeRes);
     }
@@ -114,19 +124,21 @@ public class MVPlugConfig {
         private int footerNoMoreLayoutRes;
         private int footerErrorLayoutRes;
         private int badInternetLayoutRes;
-        private int loadingLayoutRes;
+//        private int loadingLayoutRes;
         private int resFailureLayoutRes;
         private int emptyDataViewRes;
         private int exceptionViewBtnResId;
         private int emptyDataViewBtnResId;
-        private int loadingAnimaIvResId;
+//        private int loadingAnimaIvResId;
         private int recyclerHeaderViewBgColor;
         private int recyclerHeaderViewResId;
+        private MVPlugView.LoadingView loadingViewObj;
         private static String BASE_URL;
         private static int TIMEOUT = 30;
         private static int RES_SUCCESS_CODE = 0;
         private boolean mIsDebugMode = false;
         private Converter.Factory converterFactory;
+        private MVPlugView.RefreshHeaderView pullHeaderViewObj;
 
 
         private OnResponseSuccess onResponseBody;
@@ -190,17 +202,17 @@ public class MVPlugConfig {
             return this;
         }
 
-        public Builder loadingLayoutRes(int loadingLayoutRes) {
-            this.loadingLayoutRes = loadingLayoutRes;
-            return this;
-        }
+//        public Builder loadingLayoutRes(int loadingLayoutRes) {
+//            this.loadingLayoutRes = loadingLayoutRes;
+//            return this;
+//        }
 
         public Builder resFailureLayoutRes(int resFailureLayoutRes) {
             this.resFailureLayoutRes = resFailureLayoutRes;
             return this;
         }
 
-        public Builder exceptionViewBtnResId(int exceptionViewBtnResId) {
+        public Builder viewRetryBtnResId(int exceptionViewBtnResId) {
             this.exceptionViewBtnResId = exceptionViewBtnResId;
             return this;
         }
@@ -210,10 +222,10 @@ public class MVPlugConfig {
             return this;
         }
 
-        public Builder loadingAnimaIvResId(int loadingAnimaIvResId) {
-            this.loadingAnimaIvResId = loadingAnimaIvResId;
-            return this;
-        }
+//        public Builder loadingAnimaIvResId(int loadingAnimaIvResId) {
+//            this.loadingAnimaIvResId = loadingAnimaIvResId;
+//            return this;
+//        }
 
         public Builder emptyDataViewRes(int emptyDataViewRes) {
             this.emptyDataViewRes = emptyDataViewRes;
@@ -222,6 +234,15 @@ public class MVPlugConfig {
 
         public Builder configDebugMode(boolean isDebugMode) {
             this.mIsDebugMode = isDebugMode;
+            return this;
+        }
+
+        public Builder pullHeaderViewObj(MVPlugView.RefreshHeaderView pullHeaderViewObj) {
+            this.pullHeaderViewObj = pullHeaderViewObj;
+            return this;
+        }
+        public Builder loadingViewObj(MVPlugView.LoadingView loadingViewObj) {
+            this.loadingViewObj = loadingViewObj;
             return this;
         }
 

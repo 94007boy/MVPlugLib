@@ -4,20 +4,21 @@ import android.app.Activity;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
-import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.djjie.mvpluglib.R;
 import com.djjie.mvpluglib.adapter.MVPlugAdapterPresenter;
 import com.djjie.mvpluglib.presenter.MVPlugPresenter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by shf2 on 2016/12/20.
@@ -28,44 +29,43 @@ public abstract class MVPlugView<P extends MVPlugPresenter,B extends ViewDataBin
     protected IndicatedViewManager indicatedView;
     protected Context context;
     protected P presenter = createPresenter();
-    public B mViewBinding;
+    public B viewBinding;
     private Activity act;
     private MVPlugAdapterPresenter adapterPresenter;
+    private Map<String,MVPlugFragment> childFragmentMaps = new HashMap<>();
+    private boolean closeAutoDismiss = false;
 
-    public interface RefreshHeaderView{
-        View onCreateView(ViewGroup root);
-        int onSetHeaderViewBgColor();
-        void onStartAnima(View headerView);
-        void onStopAnima(View headerView);
+    public void setCloseAutoDismiss(boolean closeAutoDismiss) {
+        this.closeAutoDismiss = closeAutoDismiss;
     }
 
-    public RefreshHeaderView getRefreshHeaderView() {
-        return new RefreshHeaderView(){
-            @Override
-            public View onCreateView(ViewGroup root) {
-                View headerView = LayoutInflater.from(context).inflate(R.layout.pull_header_view, root,false);
-                return headerView;
-            }
+    public boolean isCloseAutoDismiss() {
+        return closeAutoDismiss;
+    }
 
-            @Override
-            public int onSetHeaderViewBgColor() {
-                return 0x50bfbfbf;
-            }
+    public Activity getAct() {
+        return act;
+    }
 
-            @Override
-            public void onStartAnima(View headerView) {
-                ImageView pullAnime = headerView.findViewById(R.id.pull_anime);
-                AnimationDrawable animation = (AnimationDrawable) pullAnime.getDrawable();
-                animation.start();
-            }
+    protected View getAnchorView(){
+        return null;
+    }
 
-            @Override
-            public void onStopAnima(View headerView) {
-                ImageView pullAnime = headerView.findViewById(R.id.pull_anime);
-                AnimationDrawable animation = (AnimationDrawable) pullAnime.getDrawable();
-                animation.stop();
-            }
-        };
+    public void managerView(String tag, MVPlugFragment fragment) {
+        childFragmentMaps.put(tag,fragment);
+    }
+
+    public interface RefreshHeaderView{
+        int refreshHeaderViewLayout();
+        int headerViewBgColor();
+        void doStartAnima(View headerView);
+        void doStopAnima(View headerView);
+    }
+
+
+    public interface LoadingView {
+        int loadingViewLayout();
+        void doStartAnima(View loadingView);
     }
 
     public void setAdapterPresenter(MVPlugAdapterPresenter adapterPresenter) {
@@ -83,34 +83,32 @@ public abstract class MVPlugView<P extends MVPlugPresenter,B extends ViewDataBin
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        mViewBinding = DataBindingUtil.inflate(inflater, getLayoutId(), container, false);
-        return mViewBinding.getRoot();
+        viewBinding = DataBindingUtil.inflate(inflater, getLayoutId(), container, false);
+        return viewBinding.getRoot();
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (act == null){
-            act = getActivity();
-            context = act.getApplicationContext();
-            initIndicateView(act);
-            initView();
-            initPresenter();
-        }
+        act = getActivity();
+        context = act.getApplicationContext();
+        initIndicateView(act);
+        init();
+        initPresenter();
     }
 
     private void initIndicateView(Activity act) {
-        indicatedView = new IndicatedViewManager(act,getView());
+        indicatedView = new IndicatedViewManager(act,getAnchorView() == null?getView():getAnchorView());
         indicatedView.setOnExceptionBtnClicked(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                presenter.onLoad();
+                onRetryBtnClick();
             }
         });
         indicatedView.setOnEmpertyBtnClicked(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                presenter.empertyTask();
+                onRetryBtnClick();
             }
         });
     }
@@ -119,10 +117,27 @@ public abstract class MVPlugView<P extends MVPlugPresenter,B extends ViewDataBin
     public void onDestroy() {
         super.onDestroy();
         if (presenter != null)presenter.clearTask();
+        act = null;
+    }
+
+    public void showLoadingView(String tag) {
+        if (!TextUtils.isEmpty(tag) && childFragmentMaps.get(tag) != null){
+            childFragmentMaps.get(tag).showLoadingLayout();
+        }else {
+            showLoadingView();
+        }
     }
 
     public void showLoadingView() {
         indicatedView.showLoadingLayout();
+    }
+
+    public void dismissLoadingView(String tag) {
+        if (!TextUtils.isEmpty(tag) && childFragmentMaps.get(tag) != null){
+            childFragmentMaps.get(tag).hideAll();
+        }else {
+            dismissLoadingView();
+        }
     }
 
     public void dismissLoadingView() {
@@ -133,12 +148,36 @@ public abstract class MVPlugView<P extends MVPlugPresenter,B extends ViewDataBin
         Toast.makeText(context,msg,Toast.LENGTH_LONG).show();
     }
 
+    public void showEmtyView(String tag) {
+        if (!TextUtils.isEmpty(tag) && childFragmentMaps.get(tag) != null){
+            childFragmentMaps.get(tag).showDataEmptyLayout();
+        }else {
+            showEmtyView();
+        }
+    }
+
     public void showEmtyView() {
         indicatedView.showDataEmptyLayout();
     }
 
+    public void showServerErrorView(String tag) {
+        if (!TextUtils.isEmpty(tag) && childFragmentMaps.get(tag) != null){
+            childFragmentMaps.get(tag).showExceptionLayout();
+        }else {
+            showServerErrorView();
+        }
+    }
+
     public void showServerErrorView() {
         indicatedView.showExceptionLayout();
+    }
+
+    public void showBadInternetView(String tag) {
+        if (!TextUtils.isEmpty(tag) && childFragmentMaps.get(tag) != null){
+            childFragmentMaps.get(tag).showInternetOffLayout();
+        }else {
+            showBadInternetView();
+        }
     }
 
     public void showBadInternetView() {
@@ -157,13 +196,18 @@ public abstract class MVPlugView<P extends MVPlugPresenter,B extends ViewDataBin
         return indicatedView.getViewByTag(tag);
     }
 
+    protected void onRetryBtnClick(){
+        getPresenter().onLoad();
+    }
+
     public abstract int getLayoutId();
 
     public abstract P createPresenter();
 
-    public abstract void initView();
+    public abstract void init();
 
     public P getPresenter() {
         return presenter;
     }
+
 }

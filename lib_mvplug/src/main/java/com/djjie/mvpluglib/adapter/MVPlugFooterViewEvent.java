@@ -8,7 +8,6 @@ import android.widget.FrameLayout;
 
 import com.djjie.mvpluglib.MVPlug;
 import com.djjie.mvpluglib.MVPlugConfig;
-import com.djjie.mvpluglib.adapter.MVPlugAdapter;
 import com.orhanobut.logger.Logger;
 
 /**

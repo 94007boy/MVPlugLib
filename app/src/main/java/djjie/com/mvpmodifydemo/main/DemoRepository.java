@@ -1,5 +1,6 @@
 package djjie.com.mvpmodifydemo.main;
 
+import com.djjie.mvpluglib.MVPlugConfig;
 import com.djjie.mvpluglib.model.MVPlugModel;
 import com.djjie.mvpluglib.model.MVPlugRepository;
 import java.util.HashMap;
@@ -22,15 +23,17 @@ public class DemoRepository extends MVPlugRepository{
         return INSTANCE;
     }
 
-    public Observable<DemoRes> getDemoList(){
-        String  createTime = getPageFlag() == null ? "":(String)getPageFlag();
+    public Observable<DemoRes> getDemoList(int state){
         Map<String,Object> map = new HashMap<>();
         map.put("version",1);
         map.put("clientType",1);
         map.put("deviceId","12345");
         map.put("deviceName","Samsung note 5");
         map.put("page_size","8");
-        map.put("createTime", createTime);
+        if(state == MVPlugConfig.STATE_LOADMORE){
+            String  createTime = getPageFlagByTag("list") == null ? "":(String)getPageFlagByTag("list");
+            map.put("createTime", createTime);
+        }
         return demoApi.getDemoList("shows",map).map(new MVPlugModel.GetPureDataFunc<DemoRes>());
     }
 

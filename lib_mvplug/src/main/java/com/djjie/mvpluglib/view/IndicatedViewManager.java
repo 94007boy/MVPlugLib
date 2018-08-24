@@ -2,11 +2,9 @@ package com.djjie.mvpluglib.view;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.drawable.AnimationDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ViewSwitcher;
@@ -75,11 +73,10 @@ public class IndicatedViewManager {
         mSwitcher.setLayoutParams(params);
 
         int index = 0;
-        Clonner target= new Clonner(mTargetView);
+        Clonner target = new Clonner(mTargetView);
         if(group !=null){
             index = group.indexOfChild(mTargetView);
             group.removeView(mTargetView);
-
         }
         mSwitcher.addView(mContainer,0);
         mSwitcher.addView(target.getmView(),1);
@@ -101,7 +98,9 @@ public class IndicatedViewManager {
 
     private void initViews() {
         View mLayoutInternetOff = initView(mvPlugConfig.getBadInternetLayoutRes(),TAG_INTERNET_OFF);
-        View mLayoutLoadingContent = initView(mvPlugConfig.getLoadingLayoutRes(),TAG_LOADING_CONTENT);
+        MVPlugView.LoadingView loadingView = mvPlugConfig.getLoadingViewObj();
+        View mLayoutLoadingContent = initView(loadingView.loadingViewLayout(),TAG_LOADING_CONTENT);
+        loadingView.doStartAnima(mLayoutLoadingContent);
         View mLayoutResError = initView(mvPlugConfig.getResFailureLayoutRes(), TAG_RES_ERROR_EXCEPTION);
         View mLayoutEmpty = initView(mvPlugConfig.getEmptyDataViewRes(), TAG_EMPTY_DATA);
 
@@ -131,19 +130,13 @@ public class IndicatedViewManager {
         mContainer.addView(mLayoutEmpty);
     }
 
-    private View initView(int layout, String tag){
-        View view = mInflater.inflate(layout, group,false);
-
+    private View initView(View view, String tag){
         view.setTag(tag);
         view.setVisibility(View.GONE);
 
         View exceButtonView = view.findViewById(mvPlugConfig.getExceptionViewBtnResId());
         View empertyButtonView = view.findViewById(mvPlugConfig.getEmptyDataViewBtnResId());
-        ImageView anim = (ImageView) view.findViewById(mvPlugConfig.loadingAnimaIvResId());
-        if (anim != null){
-            AnimationDrawable animationDrawable = (AnimationDrawable) anim.getDrawable();
-            animationDrawable.start();
-        }
+
         if(exceButtonView != null)
             exceButtonView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -164,6 +157,11 @@ public class IndicatedViewManager {
         params.height = params.MATCH_PARENT;
         view.setLayoutParams(params);
         return view;
+    }
+
+    private View initView(int layout, String tag){
+        View view = mInflater.inflate(layout, group,false);
+        return initView(view,tag);
     }
 
     public void showViewByTag(String tag) {
@@ -215,7 +213,7 @@ public class IndicatedViewManager {
                 view.setVisibility(View.GONE);
             }
         }
-        if(mSwitcher!=null && mSwitcher.getDisplayedChild()!=0){
+        if(mSwitcher != null){
             mSwitcher.setDisplayedChild(0);
         }
     }
@@ -233,7 +231,7 @@ public class IndicatedViewManager {
         for(View view : indicatedViews){
             view.setVisibility(View.GONE);
         }
-        if(mSwitcher!=null){
+        if(mSwitcher != null){
             mSwitcher.setDisplayedChild(1);
         }
     }

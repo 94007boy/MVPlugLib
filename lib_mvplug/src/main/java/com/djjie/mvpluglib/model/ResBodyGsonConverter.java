@@ -3,6 +3,7 @@ package com.djjie.mvpluglib.model;
 import com.djjie.mvpluglib.MVPlug;
 import com.djjie.mvpluglib.MVPlugConfig;
 import com.google.gson.Gson;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -30,6 +31,9 @@ public class ResBodyGsonConverter<T> implements Converter<ResponseBody, T> {
         MVPlugBaseResp resultResponse = gson.fromJson(originRes, MVPlugBaseResp.class);
         if (resultResponse.getCode() == mvPlugConfig.RES_SUCCESS_CODE()){
             //result==0表示成功返回，继续用本来的Model类解析
+            if (mvPlugConfig.ismIsDebugMode()){
+                Logger.d(originRes);
+            }
             return gson.fromJson(originRes, type);
         } else {
             throw new MVPlugFailReason(resultResponse.getMsg(),Integer.valueOf(resultResponse.getCode()));

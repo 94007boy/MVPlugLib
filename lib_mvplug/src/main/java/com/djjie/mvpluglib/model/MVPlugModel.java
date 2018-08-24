@@ -49,10 +49,10 @@ public class MVPlugModel {
                 .readTimeout(plugConfig.TIMEOUT(), TimeUnit.SECONDS)
                 // 失败重试
                 .retryOnConnectionFailure(true);
-        if (plugConfig.ismIsDebugMode()){
-            //日志Interceptor，可以打印日志
-            builder.addInterceptor(interceptor);
-        }
+//        if (plugConfig.ismIsDebugMode()){
+//            //日志Interceptor，可以打印日志
+//            builder.addInterceptor(interceptor);
+//        }
 
         retrofit = new Retrofit.Builder()
                 .client(builder.build())

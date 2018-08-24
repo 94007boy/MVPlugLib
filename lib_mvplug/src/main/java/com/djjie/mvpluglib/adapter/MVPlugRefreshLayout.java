@@ -68,6 +68,7 @@ public class MVPlugRefreshLayout extends ViewGroup {
     // SuperSwipeRefreshLayout内的目标View，比如RecyclerView,ListView,ScrollView,GridView
     // etc.
     private View mTarget;
+    private boolean isForbidenFull = false;//是否禁止下拉动作
 
     private OnPullRefreshListener mListener;// 下拉刷新listener
     private OnPushLoadMoreListener mOnPushLoadMoreListener;// 上拉加载更多
@@ -341,6 +342,10 @@ public class MVPlugRefreshLayout extends ViewGroup {
     public void setOnPushLoadMoreListener(
             OnPushLoadMoreListener onPushLoadMoreListener) {
         this.mOnPushLoadMoreListener = onPushLoadMoreListener;
+    }
+
+    public void setForbidenFull(boolean forbidenFull) {
+        isForbidenFull = forbidenFull;
     }
 
     /**
@@ -711,6 +716,7 @@ public class MVPlugRefreshLayout extends ViewGroup {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        if(isForbidenFull)return false;
         final int action = MotionEventCompat.getActionMasked(ev);
 
         if (mReturningToStart && action == MotionEvent.ACTION_DOWN) {

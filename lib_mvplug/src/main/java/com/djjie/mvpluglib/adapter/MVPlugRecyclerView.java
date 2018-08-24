@@ -8,11 +8,14 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.djjie.mvpluglib.MVPlug;
 import com.djjie.mvpluglib.R;
 import com.djjie.mvpluglib.view.MVPlugView;
 
@@ -29,14 +32,28 @@ public class MVPlugRecyclerView<M> extends FrameLayout {
     private MVPlugAdapter<M> adapter;
     private MVPlugAdapterPresenter presenter;
     private MVPlugView attachedView;
-    private RecyclerView recyclerView;
+    public RecyclerView recyclerView;
     private RecyclerPullListener pullListener;
     private View headerView;
     private MVPlugView.RefreshHeaderView refreshHeaderView;
     private LinearLayoutManager mLayoutManager;
+    private String tab;
 
     public void refreshDatas(List<M> m) {
         adapter.refreshDatas(m);
+    }
+
+    public void removeFooterView() {
+        if (adapter == null)return;
+        adapter.removeAllFooter();
+    }
+
+    public void disablePull() {
+        refreshLayout.setForbidenFull(true);
+    }
+
+    public View getHeadView() {
+        return headerView;
     }
 
     private abstract class RecyclerPullListener{
@@ -72,9 +89,16 @@ public class MVPlugRecyclerView<M> extends FrameLayout {
             @Override
             public void onRefresh() {
                 if (pullListener != null)pullListener.onRefresh();
-                if(refreshHeaderView != null) refreshHeaderView.onStartAnima(headerView);
+                if(refreshHeaderView != null){
+                    refreshHeaderView.doStartAnima(headerView);
+                }
                 setLoadMoreLocked(false);
-                presenter.refreshData();
+                if (TextUtils.isEmpty(tab)){
+                    presenter.refreshData();
+                }else {
+                    presenter.refreshData(tab);
+                }
+
             }
 
             @Override
@@ -112,7 +136,7 @@ public class MVPlugRecyclerView<M> extends FrameLayout {
         presenter = new MVPlugAdapterPresenter(this);
     }
 
-    public void setAdapter(MVPlugView attachedView,MVPlugAdapter adapter){
+    public void setAdapter(MVPlugView attachedView, MVPlugAdapter adapter){
         this.attachedView = attachedView;
         this.adapter = adapter;
         attachedView.setAdapterPresenter(presenter);
@@ -121,30 +145,35 @@ public class MVPlugRecyclerView<M> extends FrameLayout {
     }
 
     private void initRecyclerHeaderView() {
-        refreshHeaderView = getAttachedView().getRefreshHeaderView();
+        refreshHeaderView = MVPlug.getInstance().getConfiguration().getPullHeaderView();
         if (refreshHeaderView != null){
-            headerView = refreshHeaderView.onCreateView(this);
+            headerView = LayoutInflater.from(context).inflate(refreshHeaderView.refreshHeaderViewLayout(), this,false);
             refreshLayout.setHeaderView(headerView);
-            refreshLayout.setHeaderViewBackgroundColor(refreshHeaderView.onSetHeaderViewBgColor());
+            refreshLayout.setHeaderViewBackgroundColor(refreshHeaderView.headerViewBgColor());
         }
     }
 
-    public void initItemView(MVPlugView attachedView,final int layoutId, final int variableId){
-        MVPlugAdapter adapter = new MVPlugAdapter(getContext()) {
+    public interface OnBindDefaultViewHolder<B,M>{
+        void setItemData(B dataBinding, M data, int position);
+    }
+
+    public void initItemView(MVPlugView attachedView, final int layoutId, final OnBindDefaultViewHolder defaultViewHolder){
+        MVPlugAdapter adapter = new MVPlugAdapter<M>(getContext()) {
+
             @Override
             public MVPlugViewHolder OnCreateViewHolder(ViewGroup parent, int viewType) {
-                final ViewDataBinding dataBinding = DataBindingUtil.inflate(inflater, layoutId, parent, false);
+                ViewDataBinding dataBinding = DataBindingUtil.inflate(inflater, layoutId, parent, false);
                 return new MVPlugViewHolder<ViewDataBinding,M>(dataBinding){
                     @Override
                     public void setData(M data, int position) {
-                        dataBinding.setVariable(variableId,data);
+                        defaultViewHolder.setItemData(dataBinding,data,position);
                     }
                 };
             }
 
             @Override
             public int GetItemViewType(Object o, int postion) {
-                return postion;
+                return 0;
             }
 
         };
@@ -170,10 +199,24 @@ public class MVPlugRecyclerView<M> extends FrameLayout {
             public void onLoadMore() {
                 if (loadMoreLocked)return;//锁住，避免多次重复请求
                 if (pullListener != null)pullListener.onLoadMore();
-                presenter.loadMoreData();
+                if (TextUtils.isEmpty(tab)){
+                    presenter.loadMoreData();
+                }else {
+                    presenter.loadMoreData(tab);
+                }
                 loadMoreLocked = true;
             }
         });
+    }
+
+    public void disableLoadMore() {
+        setLoadMoreLocked(true);
+        adapter.setOnLoadMoreListener(null);
+    }
+
+    public void enableLoadMore(String tab) {
+        this.tab = tab;
+        enableLoadMore();
     }
 
     public void setLoadMoreLocked(boolean loadMoreLocked) {
@@ -187,7 +230,13 @@ public class MVPlugRecyclerView<M> extends FrameLayout {
     public void stopRefreshing(){
         refreshLayout.setRefreshing(false);
         setLoadMoreLocked(false);
-        if(refreshHeaderView != null) refreshHeaderView.onStopAnima(headerView);
+        if(refreshHeaderView != null) refreshHeaderView.doStopAnima(headerView);
+    }
+
+    public void startRefreshing(){
+        refreshLayout.setRefreshing(true);
+        setLoadMoreLocked(false);
+        if(refreshHeaderView != null) refreshHeaderView.doStartAnima(headerView);
     }
 
     public void setOnItemClickListener(MVPlugAdapter.OnItemClickListener onItemClickListener){

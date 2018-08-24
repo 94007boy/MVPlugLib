@@ -42,3 +42,32 @@ dependencies {
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.google.code.gson:gson:2.4'
 }
+ext {
+
+    publishedGroupId = rootProject.publishedGroupId //引用时的第一部分
+    artifact = 'mvplug'//引用时的第二部分
+    libraryVersion = '0.1.0'//引用时的第三部分
+    libraryName = 'mvplug'//本module名称
+    bintrayName = 'mvplug'//Jcenter 上显示的项目名
+
+
+
+    bintrayRepo = rootProject.bintrayRepo
+    libraryDescription = rootProject.libraryDescription
+
+
+
+    siteUrl =rootProject.siteUrl
+    gitUrl = rootProject.gitUrl
+
+    developerId = rootProject.developerId
+    developerName =rootProject.developerName
+    developerEmail = rootProject.developerEmail
+
+    licenseName = rootProject.licenseName
+    licenseUrl = rootProject.licenseUrl
+    allLicenses = rootProject.allLicenses
+}
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'

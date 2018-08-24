@@ -1,13 +1,19 @@
 package com.djjie.mvpluglib.presenter;
 
+import android.support.annotation.NonNull;
+
 import com.djjie.mvpluglib.MVPlug;
 import com.djjie.mvpluglib.MVPlugConfig;
+import com.djjie.mvpluglib.adapter.MVPlugAdapterPresenter;
 import com.djjie.mvpluglib.model.MVPlugFailReason;
+import com.djjie.mvpluglib.view.MVPlugFragment;
 import com.djjie.mvpluglib.view.MVPlugView;
 import com.orhanobut.logger.Logger;
+
 import java.lang.ref.WeakReference;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.Observer;
@@ -23,7 +29,7 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
     protected CompositeSubscription mSubscriptions = new CompositeSubscription();
     private V view;
 
-    public void setView(V view) {
+    public void setView(@NonNull V view) {
         this.view = view;
         onLoad();
     }
@@ -33,10 +39,6 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
     }
 
     public abstract void onLoad();
-
-    public void empertyTask() {
-
-    }
 
     public void clearTask() {
         if (mSubscriptions != null && mSubscriptions.hasSubscriptions()){
@@ -57,6 +59,17 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
                         .subscribe(observer));
     }
 
+    protected void subscribe(String tag,int state,Observable observable, Observer observer){
+        if (view == null)return;
+        if(state == MVPlugConfig.STATE_LOADING){
+            view.showLoadingView(tag);
+        }
+        mSubscriptions.add(
+                observable.subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(observer));
+    }
+
     public void onRecyclerRefreshData() {
 
     }
@@ -65,21 +78,42 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
 
     }
 
+    public void onRecyclerRefreshData(String tab) {
+
+    }
+
+    public void onRecyclerLoadMoreData(String tab) {
+
+    }
+
+    public void managerView(MVPlugFragment fragment,String tag) {
+        view.managerView(tag,fragment);
+    }
+
     public static abstract class ResObserver<M> implements Observer<M> {
         protected WeakReference<MVPlugView> view;
         public abstract void onResult(M m);
         public abstract void onResErrorMsg(String resErrorMsg,int code);
         protected boolean showErrCoverView = true;
+        protected String tag;
+        protected int state;
 
-        public ResObserver(MVPlugPresenter presenter,int state){
+        public ResObserver(MVPlugPresenter presenter, int state, String tag){
             this.view = new WeakReference<>(presenter.getView());
+            this.state = state;
+            this.tag = tag;
+        }
+
+        public ResObserver(MVPlugPresenter presenter, int state){
+            this.view = new WeakReference<>(presenter.getView());
+            this.state = state;
         }
 
         public ResObserver(MVPlugPresenter presenter){
             this.view = new WeakReference<>(presenter.getView());
         }
 
-        public ResObserver(MVPlugPresenter presenter,boolean showErrCoverView){
+        public ResObserver(MVPlugPresenter presenter, boolean showErrCoverView){
             this.showErrCoverView = showErrCoverView;
             this.view = new WeakReference<>(presenter.getView());
         }
@@ -98,6 +132,8 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
                 onResErrorMsg(exception.message(),exception.code());
             }else if(e instanceof SocketTimeoutException || e instanceof SocketException){
                 onResErrorMsg("请求超时，请重试！",9999);
+            }else{
+                onResErrorMsg(e.toString(),-1);
             }
         }
 
@@ -105,12 +141,12 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
         public void onError(Throwable e) {
             Logger.e(e.toString());
             if (view == null || view.get() == null)return;
-            view.get().dismissLoadingView();
+            view.get().dismissLoadingView(tag);
             if (showErrCoverView){
                 if (MVPlug.isNetConnected(view.get().getContext())){
-                    view.get().showServerErrorView();
+                    view.get().showServerErrorView(tag);
                 }else {
-                    view.get().showBadInternetView();
+                    view.get().showBadInternetView(tag);
                 }
             }
             dealWithException(e);
@@ -120,14 +156,19 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
         public void onNext(M m) {
             if (view == null || view.get() == null)return;
             onResult(m);
-            view.get().dismissLoadingView();
+            if(!view.get().isCloseAutoDismiss()){
+                view.get().dismissLoadingView(tag);
+            }
         }
 
+        public void showEmtyView() {
+            view.get().showEmtyView(tag);
+        }
     }
 
     public static abstract class ResRecyclerObserver<M> extends ResObserver<M> implements Observer<M> {
 
-        private int state;
+        private MVPlugAdapterPresenter adapterPresenter;
 
         public abstract void onResult(M m,int state);
 
@@ -144,7 +185,19 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
         public ResRecyclerObserver(MVPlugPresenter presenter, int state) {
             super(presenter, state);
             this.view = new WeakReference<>(presenter.getView());
-            this.state = state;
+        }
+
+        public ResRecyclerObserver(MVPlugPresenter presenter, int state, String tag) {
+            super(presenter, state, tag);
+            this.view = new WeakReference<>(presenter.getView());
+            this.tag = tag;
+        }
+
+        public ResRecyclerObserver(MVPlugPresenter presenter, int state, String tag, MVPlugAdapterPresenter adapterPresenter) {
+            super(presenter, state, tag);
+            this.view = new WeakReference<>(presenter.getView());
+            this.adapterPresenter = adapterPresenter;
+            this.tag = tag;
         }
 
         public ResRecyclerObserver(MVPlugPresenter presenter) {
@@ -160,12 +213,18 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
             if (view == null || view.get() == null)return;
             view.get().getAdapterPresenter().setLoadMoreLocked(false);
             if (state != MVPlugConfig.STATE_LOADMORE){
-                view.get().dismissLoadingView();
-                view.get().getAdapterPresenter().stopRefreshing();
-                if (MVPlug.isNetConnected(view.get().getContext())){
-                    view.get().showServerErrorView();
-                }else {
-                    view.get().showBadInternetView();
+                view.get().dismissLoadingView(tag);
+                if (adapterPresenter != null){
+                    adapterPresenter.stopRefreshing();
+                }else{
+                    view.get().getAdapterPresenter().stopRefreshing();
+                }
+                if (state == MVPlugConfig.STATE_LOADING){
+                    if (MVPlug.isNetConnected(view.get().getContext())){
+                        view.get().showServerErrorView(tag);
+                    }else {
+                        view.get().showBadInternetView(tag);
+                    }
                 }
             }else {
                 view.get().getAdapterPresenter().onLoadMoreError();
@@ -178,9 +237,9 @@ public abstract class MVPlugPresenter<V extends MVPlugView> {
             if (view == null || view.get() == null)return;
             view.get().getAdapterPresenter().setLoadMoreLocked(false);
             onResult(m,state);
-            if (state != MVPlugConfig.STATE_LOADMORE){
+            if (!view.get().isCloseAutoDismiss() && state != MVPlugConfig.STATE_LOADMORE){
                 view.get().getAdapterPresenter().stopRefreshing();
-                view.get().dismissLoadingView();
+                view.get().dismissLoadingView(tag);
             }
         }
     }

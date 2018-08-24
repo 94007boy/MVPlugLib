@@ -23,6 +23,14 @@ public class MVPlugAdapterPresenter<T> {
         view.get().getAttachedView().getPresenter().onRecyclerLoadMoreData();
     }
 
+    public void refreshData(String tab){
+        view.get().getAttachedView().getPresenter().onRecyclerRefreshData(tab);
+    }
+
+    public void loadMoreData(String tab){
+        view.get().getAttachedView().getPresenter().onRecyclerLoadMoreData(tab);
+    }
+
     public void onLoadMoreData(List<T> datas){
         view.get().getAdapter().addMoreDatas(datas);
         view.get().setLoadMoreLocked(false);
@@ -38,5 +46,14 @@ public class MVPlugAdapterPresenter<T> {
 
     public void setLoadMoreLocked(boolean loadMoreLocked) {
         view.get().setLoadMoreLocked(loadMoreLocked);
+    }
+
+    public void clearData() {
+        view.get().getAdapter().clear();
+    }
+
+    public void removeFooterView() {
+        view.get().disableLoadMore();
+        view.get().removeFooterView();
     }
 }

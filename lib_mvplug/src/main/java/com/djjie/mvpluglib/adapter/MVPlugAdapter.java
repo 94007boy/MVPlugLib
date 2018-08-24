@@ -41,7 +41,7 @@ abstract public class MVPlugAdapter<M> extends RecyclerView.Adapter<MVPlugViewHo
         void onBindView(View headerView);//写错了，headerView改为itemView
     }
 
-    private class StateViewHolder extends MVPlugViewHolder{
+    private class StateViewHolder extends MVPlugViewHolder {
         public StateViewHolder(View itemView) {
             super(itemView);
         }
@@ -79,9 +79,9 @@ abstract public class MVPlugAdapter<M> extends RecyclerView.Adapter<MVPlugViewHo
 
     @Override
     public MVPlugViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (plugConfig.ismIsDebugMode()){
-            Logger.d("onCreateViewHolder");
-        }
+//        if (plugConfig.ismIsDebugMode()){
+//            Logger.d("onCreateViewHolder");
+//        }
         if(viewType== VIEW_TYPE_FOOTER){
             return new MVPlugViewHolder(mFooterView);
         }
@@ -121,9 +121,9 @@ abstract public class MVPlugAdapter<M> extends RecyclerView.Adapter<MVPlugViewHo
     public void onBindViewHolder(MVPlugViewHolder holder, final int position) {
         holder.itemView.setId(position);
         int totalSize = headers.size() + itemDatas.size() + footers.size() + 1;
-        if (plugConfig.ismIsDebugMode()){
-            Logger.d("onBindViewHolder position = "+position+" , totalSize = "+totalSize);
-        }
+//        if (plugConfig.ismIsDebugMode()){
+//            Logger.d("onBindViewHolder position = "+position+" , totalSize = "+totalSize);
+//        }
         if (position == totalSize - 1){
 //            footerViewEvent.onFooterViewBinded(hasLoadMore);//末尾
             return;
@@ -347,6 +347,7 @@ abstract public class MVPlugAdapter<M> extends RecyclerView.Adapter<MVPlugViewHo
     }
     public void removeAllFooter(){
         footers.clear();
+        footerViewEvent.hideFooterView();
     }
 
     public void removeFooter(){

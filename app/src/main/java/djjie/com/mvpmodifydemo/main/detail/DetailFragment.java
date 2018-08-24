@@ -20,12 +20,18 @@ public class DetailFragment extends DetailContract.View{
     }
 
     @Override
-    public void initView() {
+    void onSuccess(DemoDetail demoDetail) {
+        viewBinding.setDetail(demoDetail);
+    }
+
+    @Override
+    public void init() {
 
     }
 
     @Override
-    void onSuccess(DemoDetail demoDetail) {
-        mViewBinding.setDetail(demoDetail);
+    protected void onRetryBtnClick() {
+        super.onRetryBtnClick();
+        getPresenter().onLoad();
     }
 }
